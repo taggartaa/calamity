@@ -10,11 +10,9 @@ using the password and username from the client.
 
 from Network import msnConnect
 
-def login():
+def login(email, password):
     """
     @brief Get the password and username from the client, and 
     """
-    email = raw_input("email: ")
-    password = raw_input("password: ")
     sock = msnConnect(email, password)
     return sock

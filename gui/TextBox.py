@@ -67,7 +67,7 @@ class TextBox(Object):
         """
         if self._component != None:
             self._component["text"] = text
-            return
+
         self.__text = text
         
     def getMessage(self):
@@ -89,7 +89,6 @@ class TextBox(Object):
         """
         if self._component != None:
             self._component["fg"] = color
-            return
             
         self.__fColor = color 
             

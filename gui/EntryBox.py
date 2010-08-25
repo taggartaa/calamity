@@ -24,6 +24,21 @@ class EntryBox(Object):
         Object.__init__(self)
         self.__text = ""
         
+        self.__hidden = False
+        self.__hiddenChar = '*'
+        
+    def setHiddenMessage(self, char='*', hidden=True):
+        """
+        @brief Only show char's, no matter what the user types (usually for passwords)
+        
+        @var char: Character to show instead of actual input.
+        """
+        self.__hidden = hidden
+        self.__hiddenChar = char
+        
+        if self._component != None and self.__hidden:
+            self._component["show"] = self.__hiddenChar
+        
     def setMessage(self, message):
         """
         @brief Sets the visable text to message
@@ -63,5 +78,7 @@ class EntryBox(Object):
         @var parent The Widget that the EntryBox is to be placed on.
         """
         self._component = Tkinter.Entry(parent)
+        self.setHiddenMessage(char=self.__hiddenChar, hidden=self.__hidden)
+        self.setMessage(self.__text)
         self._parent()
 

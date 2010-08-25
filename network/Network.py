@@ -45,13 +45,11 @@ def getMsnTicket(challange, password, email):
         if rec.split("\r\n")[0] == "HTTP/1.1 200 OK":
             received = True
         else:
-            print "FAIL: ",rec
             return False
         
     x = rec.find("from-PP='")+9
     y = rec[x:].find("'") + x
     
-    print rec
     return rec[x:y]
 
 def msnRecv(map, sock, waitfor = -1):
@@ -67,12 +65,10 @@ def msnRecv(map, sock, waitfor = -1):
         for line in sock.recv(4096).split("\n"):
             if line != "":
                 map[int(line.split(" ")[1])]= line
-                print "recv: " + line
             
         if waitfor != -1:
             try:
                 test = map[waitfor]
-                print "Got it: ", test
                 recieved = True
             except:
                 pass
@@ -109,7 +105,7 @@ def msnConnect(email, password):
         
     #msnRecv(responses, authServer)
         
-    authServer.send("USR %d TWN I ajtaggs@hotmail.com\n" %TID)
+    authServer.send("USR %d TWN I %s\n" %(TID, email))
     TID+=1
         
     msnRecv(responses, authServer, TID-1)
@@ -145,7 +141,6 @@ def msnConnect(email, password):
     # msn challenges me!
     challenge = responses[TID-1].split(" ")[4]   
     ticket = getMsnTicket(challenge, password, email)
-    print "ticket: ", ticket
     notServer.send("USR %d TWN S %s\n" %(TID, ticket))
     TID+=1
     msnRecv(responses, notServer, TID-1)

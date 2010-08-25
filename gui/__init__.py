@@ -11,9 +11,11 @@ objects on said windows extremely easy.
 """
 
 import Globals
+from Button import Button
 from EntryBox import EntryBox
 from Layer import Layer
 from Menu import Menu, MenuItem, MenuBar
 from MessageBox import MessageBox
 from TextBox import TextBox
 from Window import Window, PopUp, App
+

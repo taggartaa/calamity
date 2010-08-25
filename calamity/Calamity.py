@@ -9,6 +9,7 @@
 """
 
 import gui
+import network
 
 import Globals
 from Member import Member
@@ -30,7 +31,35 @@ class CalamityApp:
         
         self.__window = gui.Window("Calamity", self.__app)
         
+        self.__connection = False
+        
+        # Login Screen
+        self.__signInLayer = gui.Layer(align="pack")
+        
+        self.__emailLabel = gui.TextBox(text="Email:", justify="right")
+        self.__email = gui.EntryBox()
+        self.__email.setPosition((0,1))
+        
+        self.__passwordLabel = gui.TextBox(text="Password:", justify="right", pos=(1,0))
+        self.__password = gui.EntryBox()
+        self.__password.setHiddenMessage()
+        self.__password.setPosition((1,1))
+        
+        self.__signIn = gui.Button(text="Sign In")
+        self.__signIn.setPosition((2,1))
+        
+        self.__signInLayer.add(self.__emailLabel)
+        self.__signInLayer.add(self.__email)
+        self.__signInLayer.add(self.__passwordLabel)
+        self.__signInLayer.add(self.__password)
+        self.__signInLayer.add(self.__signIn)
+        
+        # Login Binds
+        self.__signIn.bind(gui.Globals.CLICKED, self.signIn)
+        
+        # After Login
         self.__layer = gui.Layer(align="pack")
+        self.__layer.setVisibility(False)
         self.__layer.setBackgroundColor("clear")
         
         menu = gui.Menu("File")
@@ -45,6 +74,7 @@ class CalamityApp:
         self.add(Group("Default"))
                 
         self.__window.add(menubar)
+        self.__window.add(self.__signInLayer)
         self.__window.add(self.__layer)
         
         # Bindings
@@ -144,4 +174,12 @@ class CalamityApp:
         """
         gui.PopUp(self.__window, "About", "Calamity (Chris and Aaron Launch A Message Instantly To You)\n\n Its the cool way to IM!")
         
+    def signIn(self, event):
+        """
+        @brief Signs in using the email and password provided
+        """
+        self.__connection = network.login(email=self.__email.getMessage(), password=self.__password.getMessage())
+        if self.__connection:
+            self.__signInLayer.setVisibility(False)
+            self.__layer.setVisibility(True)
         

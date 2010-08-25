@@ -14,7 +14,7 @@ class Object:
     """
     def __init__(self):
         """
-        @brief Constructor for an abstract GUIobject
+        @brief Constructor for an abstract GUIobject visable
         """
         self._component = None
         self._borderWidth = 0
@@ -23,14 +23,15 @@ class Object:
         self._bColor = ""
         self._bg = ""
         self._position = [0,0]
-        self._colGrowthRate = []
-        self._rowGrowthRate = []
+        self._colGrowthRate = dict()
+        self._rowGrowthRate = dict()
         self._growth = [False, False]
         self._width = 0
         self._blend = []
         self._binds = []
         self._padding = [0,0]
-        
+        self._visible = True
+        self._sticky = ""
         self._blended = True
         
         self._focus = False
@@ -61,12 +62,14 @@ class Object:
             
         for b in self._binds:
             self._component.bind(b[0], b[1])
+         
+        self.columnGrowthRate()   
+        #for i in self._colGrowthRate:
+        #    self.columnGrowthRate(i[0], i[1])
             
-        for i in self._colGrowthRate:
-            self.columnGrowthRate(i[0], i[1])
-            
-        for i in self._rowGrowthRate:
-            self.rowGrowthRate(i[0], i[1])
+        self.rowGrowthRate()
+        #for i in self._rowGrowthRate:
+        #    self.rowGrowthRate(i[0], i[1])
 
         self.setGrowth()
         self.setPadding()
@@ -82,35 +85,64 @@ class Object:
             self._component["width"] = self._width
             
         self.setBorderType(self._bordertype)
-        
-        if self._align == "grid":
-            self._component.grid(row=self._position[0], column=self._position[1])
-        elif self._align == "pack":
-            self._component.pack()
+        self.setAlign(self._align)
             
-    def columnGrowthRate(self, column, growthRate):
+    def setVisibility(self, visible):
+        """
+        @brief Sets whether or not an object is currently visible.
+        
+        @var visible: Whether or not the object should be on screen or not.
+        """
+        
+        if self._visible != visible:
+            self._visible = visible
+        
+            if self._component != None:
+                if visible == False:
+                    if self._align == "pack":
+                        self._component.forget()
+                    elif self._align == "grid":
+                        self._component.grid_forget()
+                else:
+                    self._configure()
+            
+        
+    def getVisibility(self):
+        """
+        @brief Determines if an object is currently visible.
+        Visibility may be True even though it does not appear on screen if the 
+        main loop has not been started, or if the parent object of this object has
+        a visibility set to False.
+        
+        @return True/False Whether or not the object is visible.
+        """
+        return self._visible
+            
+    def columnGrowthRate(self, column=-1, growthRate=0):
         """
         @brief The rate at which the column on this object grows with respect to itself.
         
         @var column: The column number.
         @var growthRate: weight value that determines the growth rate of a column.
         """
+        
+        if column != -1:
+            self._colGrowthRate[column] = growthRate
+        
         if self._component != None:
-            self._component.grid_columnconfigure(column, weight=growthRate)
-        else:
-            self._colGrowthRate.append((column, growthRate))
+            self._configure()
             
-    def rowGrowthRate(self, row, growthRate):
+    def rowGrowthRate(self, row=-1, growthRate=0):
         """
         @brief The rate at which the row grows with respect to its parent.
         
         @var growthRate: weight value that determines the growth rate of a row.
         """
+        if row != -1:
+            self._rowGrowthRate[row] = growthRate
+            
         if self._component != None:
-            self._component.grid_rowconfigure(row, weight=growthRate)
-        else:
-            self._rowGrowthRate.append((row, growthRate))
-        
+            self._configure()
             
     def setGrowth(self, width = -1, height = -1):
         """
@@ -136,7 +168,9 @@ class Object:
             if self._growth[1]:
                 sticky += "ns"
                 
-            self._component.grid_configure(sticky=sticky)
+            self._sticky = sticky
+                
+            self._configure()
             
     def setPadding(self, x=-1, y=-1):
         """
@@ -151,7 +185,7 @@ class Object:
             self._padding[1] = y
             
         if self._component != None:
-            self._component.grid_configure(padx=self._padding[0], pady=self._padding[1])
+            self._configure()
             
     def setAlign(self, align):
         """
@@ -159,11 +193,11 @@ class Object:
         
         @var align: The alignment type of the object. grid = (row, column), pack = center it!
         """
-        if self._component != None:
+        if self._component != None and self._visible:
             if self._align == "grid":
-                self._component.grid(row=self._position[0], column=self._position[1])
+                self._configure()
             elif self._align == "pack":
-                self._component.pack()
+                self._configure()
         
         self._align = align
         
@@ -288,9 +322,9 @@ class Object:
         
         if self._component != None:
             if self._align == "grid":
-                self._component.grid(row=pos[0], column=pos[1])
+                self._configure()
             else:
-                self._component.pack()
+                self._configure()
         
     def getPosition(self):
         """
@@ -310,4 +344,19 @@ class Object:
             self._component["width"] = width
 
         self._width = width
+        
+    def _configure(self):
+        """
+        @brief Internal function that should not be called outside of here. 
+        It is what actually draws the objects on screen.
+        """
+        if self._visible:
+            if self._align == "pack":
+                self._component.pack()
+            elif self._align == "grid":
+                self._component.grid_configure(padx=self._padding[0], pady=self._padding[1], sticky=self._sticky, row=self._position[0], column=self._position[1])
+                for row, rate in self._rowGrowthRate.items():
+                    self._component.grid_rowconfigure(row, weight=rate)
+                for column, rate in self._colGrowthRate.items():
+                    self._component.grid_columnconfigure(column, weight=rate)
 
