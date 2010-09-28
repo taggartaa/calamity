@@ -59,7 +59,11 @@ class Object:
         @brief Abstract parent method. 
         @note This method should never be called outside a parent setting method. (See parent methods of children classes)
         """
-            
+        
+        # for efficiency
+        tmpVis = self.getVisibility()
+        self.setVisibility(False)
+        
         for b in self._binds:
             self._component.bind(b[0], b[1])
          
@@ -86,6 +90,8 @@ class Object:
             
         self.setBorderType(self._bordertype)
         self.setAlign(self._align)
+        
+        self.setVisibility(tmpVis)
             
     def setVisibility(self, visible):
         """
@@ -193,13 +199,12 @@ class Object:
         
         @var align: The alignment type of the object. grid = (row, column), pack = center it!
         """
-        if self._component != None and self._visible:
-            if self._align == "grid":
-                self._configure()
-            elif self._align == "pack":
-                self._configure()
-        
         self._align = align
+        
+        if self._component != None:
+            self._configure()
+        
+        
         
     def setBorderWidth(self, width):
         """
@@ -321,10 +326,7 @@ class Object:
         self._position=pos
         
         if self._component != None:
-            if self._align == "grid":
-                self._configure()
-            else:
-                self._configure()
+            self._configure()
         
     def getPosition(self):
         """
@@ -355,8 +357,30 @@ class Object:
                 self._component.pack()
             elif self._align == "grid":
                 self._component.grid_configure(padx=self._padding[0], pady=self._padding[1], sticky=self._sticky, row=self._position[0], column=self._position[1])
-                for row, rate in self._rowGrowthRate.items():
-                    self._component.grid_rowconfigure(row, weight=rate)
-                for column, rate in self._colGrowthRate.items():
-                    self._component.grid_columnconfigure(column, weight=rate)
+             
+            # Even if this item is packed or exists without packaging, doesn't mean the children aren't packaged!   
+            for row, rate in self._rowGrowthRate.items():
+                self._component.grid_rowconfigure(row, weight=rate)
+                    
+            for column, rate in self._colGrowthRate.items():
+                self._component.grid_columnconfigure(column, weight=rate)
+                    
+
+    def __str__(self):
+        """
+        @brief string version of an object. 
+        Tells a little about the object.
+        """
+        
+        string = ""
+        
+        if self._align == "grid":
+            string = "Grid info: " + str(self._component.grid_info()) + "\n"
+        elif self._align == "pack":
+            string = "Pack info:" + str(self._component.pack_info()) + "\n"
+        
+        string += "Row Growth Rate: " + str(self._rowGrowthRate) + "\n"
+        string += "Column Growth Rate: " + str(self._colGrowthRate) + "\n"
+        
+        return string
 

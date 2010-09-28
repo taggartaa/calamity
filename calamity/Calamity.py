@@ -47,6 +47,7 @@ class CalamityApp:
         
         self.__signIn = gui.Button(text="Sign In")
         self.__signIn.setPosition((2,1))
+        self.__signIn.setBorderType("raised")
         
         self.__signInLayer.add(self.__emailLabel)
         self.__signInLayer.add(self.__email)
@@ -56,6 +57,8 @@ class CalamityApp:
         
         # Login Binds
         self.__signIn.bind(gui.Globals.CLICKED, self.signIn)
+        self.__app.bind(gui.Globals.ENTER, self.signIn)
+        
         
         # After Login
         self.__layer = gui.Layer(align="pack")
@@ -76,13 +79,6 @@ class CalamityApp:
         self.__window.add(menubar)
         self.__window.add(self.__signInLayer)
         self.__window.add(self.__layer)
-        
-        # Bindings
-        self.__app.bind(gui.Globals.UP, self.tab)
-        self.__app.bind(gui.Globals.DOWN, self.tab)
-        self.__app.bind(gui.Globals.TAB, self.tab)
-        
-        self.__app.bind(gui.Globals.ENTER, self.enter)
         
         
     def add(self, item):
@@ -128,18 +124,18 @@ class CalamityApp:
         curGroup = Member.focus[0].getGroup()
         
         if event.keysym == "Up":
-            if not curGroup.tab(gui.Globals.UP):
+            while not curGroup.tab(gui.Globals.UP):
                 if curGroup == self.__groups[0]:
-                    self.__groups[-1].tab(gui.Globals.UP)
+                    curGroup = self.__groups[-1]
                 else:
-                    self.__groups[self.__groups.index(curGroup)-1].tab(gui.Globals.UP)
+                    curGroup = self.__groups[self.__groups.index(curGroup)-1]
                     
         elif event.keysym == "Down" or event.keysym == "Tab":
-            if not curGroup.tab(gui.Globals.DOWN):
+            while not curGroup.tab(gui.Globals.DOWN):
                 if curGroup == self.__groups[-1]:
-                    self.__groups[0].tab(gui.Globals.DOWN)
+                    curGroup = self.__groups[0]
                 else:
-                    self.__groups[self.__groups.index(curGroup)+1].tab(gui.Globals.DOWN)
+                    curGroup = self.__groups[self.__groups.index(curGroup)+1]
                     
     def enter(self, event):
         """
@@ -178,8 +174,44 @@ class CalamityApp:
         """
         @brief Signs in using the email and password provided
         """
-        self.__connection = network.login(email=self.__email.getMessage(), password=self.__password.getMessage())
-        if self.__connection:
+        connected = True
+        loggedIn = False
+        try:
+            self.__connection = network.login(email=self.__email.getMessage(), password=self.__password.getMessage())
+            self.__connection.setApp(self)
+            self.getUpdates()
+        except ValueError as e:
+            print e
+            connected = False
+                
+        if connected:
+            
+            # Bindings
+            self.__app.bind(gui.Globals.UP, self.tab)
+            self.__app.bind(gui.Globals.DOWN, self.tab)
+            self.__app.bind(gui.Globals.TAB, self.tab)
+            
+            # Override the previous ENTER bind
+            self.__app.bind(gui.Globals.ENTER, self.enter)
+            
             self.__signInLayer.setVisibility(False)
             self.__layer.setVisibility(True)
+            
+    def getUpdates(self):
+        """
+        @brief Get updates from the server, calls itself every second to check.
+        @todo Perhaps threading this process instead to reduce busy waiting and delay, but I foresee to many issues at the moment
+        """
+        self.__connection.listen()
+        self.__app.after(1000, self.getUpdates)
         
+        
+            
+    def __getitem__(self, index):
+        """
+        @brief Indexing a Calamity app gives you the group at position index.
+        
+        @var index: The index of the group you want.
+        @retur.n The group at position index
+        """
+        return self.__groups[index]

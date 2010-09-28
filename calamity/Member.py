@@ -148,11 +148,11 @@ class Member:
             
         elif status == "away":
             self.__status.setMessage("A")
-            self.__status.setForgroudColor("Grey")
+            self.__status.setForegroundColor("Grey")
             
         elif status == "busy":
             self.__status.setMessage("B")
-            self.__status.setForgroundColor("Yellow")
+            self.__status.setForegroundColor("Yellow")
         
     def getStatus(self):
         """
@@ -193,6 +193,14 @@ class Member:
         @return string: The current message
         """
         return self.__mess
+    
+    def getEmail(self):
+        """
+        @brief Gets the email of the Member.
+        
+        @return The email of the Member
+        """
+        return self.__email
     
     def setPostition(self, position):
         """

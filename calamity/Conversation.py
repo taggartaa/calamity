@@ -40,6 +40,7 @@ class Conversation:
         self.__layer.setGrowth(height=True, width=True)
         self.__layer.rowGrowthRate(row=0, growthRate=1)
         self.__layer.columnGrowthRate(column=0, growthRate=1)
+        self.__layer.setPosition((0,0))
         
         self.__messages = gui.MessageBox()
         self.__messages.setPosition((0,0))

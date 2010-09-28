@@ -8,11 +8,27 @@
 using the password and username from the client.
 """
 
-from Network import msnConnect
+import msn
 
 def login(email, password):
     """
     @brief Get the password and username from the client, and 
     """
-    sock = msnConnect(email, password)
-    return sock
+    
+    if email.find('\n') != -1:
+        raise ValueError("Email cannot contain newline (\n) characters!")
+    
+    try:
+        server = email.split('@')
+        if len(server) != 2:
+            raise ValueError("To the exception!!")
+        
+        server = server[1]
+        
+    except:
+        raise ValueError("Email address needs to be in format: name@passsport.com")
+    
+    if server == "hotmail.com" or server == "msn.com" or "live.com":
+        connection = msn.Connection(email=email, password=password)
+        return connection
+    

@@ -31,6 +31,7 @@ class Group:
         
         @param name: A string that represents the name of the Group
         @param members: An optional list of Members (or just a member) to initialize the group. 
+        @todo change over to dictionaries for efficiency.
         """
 
         self.__layer = gui.Layer(pos=position)
@@ -46,6 +47,11 @@ class Group:
         self.__members = []
         
     def getBlend(self):
+        """
+        @brief Gets the blended color of the background
+        
+        @return Blended background color
+        """
         return self.__layer.getBlend()
         
     def getLayer(self):
@@ -66,9 +72,17 @@ class Group:
         position = bisect.bisect(self.__members, item)
         bisect.insort(self.__members, item)
         item.setGroup(self)
+        self.reOrder(position)
+        self.__layer.add(item.getLayer())
         
-        i = position
-        for member in self.__members[position:]:
+    def reOrder(self, startFrom=0):
+        """
+        @brief Sort the array from StartFrom, to the end.
+        
+        @param startFrom: Where to start from when sorting (inclusive)
+        """
+        i = startFrom
+        for member in self.__members[startFrom:]:
             member.setPostition((i+1, 0))
             member.setBorderColor(self.__hColor)
             if i%2 == 1:
@@ -77,7 +91,7 @@ class Group:
                 member.setBackgroundColor(Globals.MEMBER_EVEN_COLOR)
             i+=1
         
-        self.__layer.add(item.getLayer())
+
                 
     def setPosition(self, position):
         """
@@ -129,6 +143,9 @@ class Group:
         @var direction: Whether the next member is up or down.
         @return True/False Whether or not the tab was successful.
         """
+        if len(self) == 0:
+            return False
+        
         try:
             i = self.__members.index(Member.focus[0])
         except:
@@ -157,7 +174,36 @@ class Group:
                 return True
             else:
                 return False
+        
+    def find(self, email):
+        """
+        @brief Returns the index of a Member with the email of the parameter
+        
+        @var email: The email of the Member to search for.
+        @return The index of the member, -1 if not found. 
+        """
+        index = 0
+        for member in self.__members:
+            if member.getEmail() == email:
+                return index
+            index+=1
+        return -1
+    
+    def sort(self):
+        """
+        @brief Sorts the members list.
+        """
+        self.__members.sort()
+        self.reOrder()
                 
+    def __getitem__(self, index):
+        """
+        @brief Indexing a Group gives you the member the group is in.
+        
+        @var index: The index of the Member you want.
+        @return The Member at position index
+        """
+        return self.__members[index]
         
             
     def __eq__(self, other):
@@ -169,5 +215,12 @@ class Group:
         
         return self.__name == other.__name
 
+    def __len__(self):
+        """
+        @brief Returns how many members are in the group.
+        
+        @return The number of members in the group.
+        """
+        return len(self.__members)
         
         
